@@ -113,6 +113,7 @@ class WaldoReplication(klibs.Experiment):
 				print self.backgrounds[image_f][1].height
 				print self.backgrounds[image_f][1].width
 				self.backgrounds[image_f][1].scale( Params.screen_x_y )
+
 	def block(self, block_num):
 		pass
 
@@ -129,6 +130,12 @@ class WaldoReplication(klibs.Experiment):
 			y1 = l[LOC][1] - self.dot.height // 2
 			y2 = l[LOC][1] + self.dot.height // 2
 			self.eyelink.add_gaze_boundary(boundary_name, [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
+		x1 = Params.screen_c[0] - kld.drift_correct_target().width
+		y1 = Params.screen_c[1] - kld.drift_correct_target().height
+		x2 = Params.screen_c[0] + kld.drift_correct_target().width
+		y2 = Params.screen_c[1] + kld.drift_correct_target().height
+		self.eyelink.add_gaze_boundary("trial_fixation", [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
+
 		self.drift_correct()
 
 	def trial(self, trial_factors):
@@ -137,7 +144,8 @@ class WaldoReplication(klibs.Experiment):
 		self.flip()
 		fixate_interval = Params.tk.countdown(0.7)
 		while fixate_interval.counting():
-			if not self.eyelink.within_boundary("custom_dc_0"):
+			print self.eyelink.fetch_gaze_boundary("trial_fixation")
+			if not self.eyelink.within_boundary("trial_fixation"):
 				self.fill([255, 0, 0])
 				message_format = {"color": [255, 255, 255, 255],
 								  "font_size": 64,
