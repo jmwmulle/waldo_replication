@@ -1,0 +1,8 @@
+bg_image.param,angle.param,bg_state.param,trial_count.param
+test_waldo_1.jpg,0,present,
+test_waldo_2.jpg,60,absent,
+test_waldo_3.jpg,120,intermittent,
+test_waldo_4.jpg,180,,
+test_waldo_5.jpg,240,,
+test_waldo_6.jpg,300,,
+test_waldo_7.jpg,,,
