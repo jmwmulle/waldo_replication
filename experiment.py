@@ -29,7 +29,7 @@ Params.eye_tracking = True
 Params.eye_tracker_available = False
 
 Params.blocks_per_experiment = 1
-Params.trials_per_block = 5
+Params.trials_per_block = 1
 Params.practice_blocks_per_experiment = 1
 Params.trials_per_practice_block = 1
 Params.manual_trial_generation = False
@@ -68,7 +68,7 @@ class WaldoReplication(klibs.Experiment):
 	n_back = 1
 	dot_diameter_deg = 0.5
 	dot_diameter = None
-	dot = None
+	search_disc = None
 	screen_pad = None
 	min_fixation = 20
 	max_fixation = 500
@@ -93,7 +93,7 @@ class WaldoReplication(klibs.Experiment):
 		# circle_vars = {"diameter": self.dot_diameter * 2,
 		# 			   "stroke": ,
 		# 			   "fill": [255, 0, 0]}
-		self.dot = kld.Circle(self.dot_diameter * 3, (8, [255, 255, 255]), [255, 0, 0, 255])
+		self.search_disc = kld.Annulus(self.dot_diameter * 3, 10, fill=[0, 0, 0, 255])
 		self.image_dir = os.path.join(Params.asset_path, "image", "waldo_test")
 
 	def setup(self):
@@ -110,8 +110,6 @@ class WaldoReplication(klibs.Experiment):
 				pump()
 				image_f = "test_waldo_{0}.jpg".format(i)
 				self.backgrounds[image_f] = ([image_f, NumpySurface(os.path.join(self.image_dir, image_f))])
-				print self.backgrounds[image_f][1].height
-				print self.backgrounds[image_f][1].width
 				self.backgrounds[image_f][1].scale( Params.screen_x_y )
 
 	def block(self, block_num):
@@ -125,10 +123,10 @@ class WaldoReplication(klibs.Experiment):
 		self.bg = self.backgrounds[trial_factors[1]]
 		for l in self.locations:
 			boundary_name = "saccade_{0}".format(self.locations.index(l))
-			x1 = l[LOC][0] - self.dot.width // 2
-			x2 = l[LOC][0] + self.dot.width // 2
-			y1 = l[LOC][1] - self.dot.height // 2
-			y2 = l[LOC][1] + self.dot.height // 2
+			x1 = l[LOC][0] - self.search_disc.width // 2
+			x2 = l[LOC][0] + self.search_disc.width // 2
+			y1 = l[LOC][1] - self.search_disc.height // 2
+			y2 = l[LOC][1] + self.search_disc.height // 2
 			self.eyelink.add_gaze_boundary(boundary_name, [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
 		x1 = Params.screen_c[0] - kld.drift_correct_target().width
 		y1 = Params.screen_c[1] - kld.drift_correct_target().height
@@ -175,8 +173,12 @@ class WaldoReplication(klibs.Experiment):
 				event_stack = sdl2.ext.get_events()
 				for e in event_stack:
 					self.over_watch(e)
-				self.refresh_background(self.bg_state)
-				self.blit(self.dot, position=l[LOC], registration=5)
+				if visited_locations < len(self.locations):
+					self.refresh_background()
+				else:
+					self.refresh_background(False if self.bg_state == "present" else  True)
+
+				self.blit(self.search_disc, position=l[LOC], registration=5)
 				self.flip()
 			Params.tk.stop('rt')
 			if visited_locations == len(self.locations):
