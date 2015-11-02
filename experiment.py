@@ -21,15 +21,15 @@ import random
 
 Params.default_fill_color = (100, 100, 100, 255)  # TODO: rotate through seasons
 
-Params.debug_level = 3
+Params.debug_level = 0
 
 Params.collect_demographics = False
 Params.practicing = False
 Params.eye_tracking = True
 Params.eye_tracker_available = False
 
-Params.blocks_per_experiment = 1
-Params.trials_per_block = 1
+Params.blocks_per_experiment = 2
+Params.trials_per_block = 126
 Params.practice_blocks_per_experiment = 1
 Params.trials_per_practice_block = 1
 Params.manual_trial_generation = False
@@ -65,7 +65,7 @@ class WaldoReplication(klibs.Experiment):
 	min_amplitude = None  # px
 	min_saccades = 5
 	max_saccades = 12
-	n_back = 1
+	n_back = None
 	dot_diameter_deg = 0.5
 	dot_diameter = None
 	search_disc = None
@@ -73,6 +73,7 @@ class WaldoReplication(klibs.Experiment):
 	min_fixation = 20
 	max_fixation = 500
 	allow_intermittent_bg = True
+	gaze_boundary_tolerance = 3  # if drift_correct target too small to fixate, use this to scale boundary (not image)
 
 	# trial vars
 	locations = []
@@ -81,20 +82,17 @@ class WaldoReplication(klibs.Experiment):
 	bg = None
 	bg_state = None
 	saccade_count = None
+	frame_size = "1024x768"
 
 	def __init__(self, *args, **kwargs):
 		super(WaldoReplication, self).__init__(*args, **kwargs)
 		self.max_amplitude = deg_to_px(self.max_amplitude_deg)
 		self.min_amplitude = deg_to_px(self.min_amplitude_deg)
 		self.dot_diameter = deg_to_px(self.dot_diameter_deg)
-		self.screen_pad = self.dot_diameter // 2
-		# self.trial_factory.trial_generation_function = null_trial_generator
-		# self.trial_factory.generate()
-		# circle_vars = {"diameter": self.dot_diameter * 2,
-		# 			   "stroke": ,
-		# 			   "fill": [255, 0, 0]}
+		self.screen_pad = self.dot_diameter * 1.5
 		self.search_disc = kld.Annulus(self.dot_diameter * 3, 10, fill=[0, 0, 0, 255])
-		self.image_dir = os.path.join(Params.asset_path, "image", "waldo_test")
+		self.image_dir = os.path.join(Params.asset_path, "image")
+		self.mouse_dot = kld.Circle(12, [3, [0, 0, 0]], [255, 0, 0])
 
 	def setup(self):
 		Params.key_maps['WaldoReplication_response'] = klibs.KeyMap('WaldoReplication_response', [], [], [])
@@ -106,11 +104,19 @@ class WaldoReplication(klibs.Experiment):
 		self.message("Loading, please hold...", **msg_format)
 		self.flip(0.1)
 		if not Params.testing:
-			for i in range(1, 8):
+			scale_images = False
+			for i in range(1, 10):
 				pump()
-				image_f = "test_waldo_{0}.jpg".format(i)
-				self.backgrounds[image_f] = ([image_f, NumpySurface(os.path.join(self.image_dir, image_f))])
-				self.backgrounds[image_f][1].scale( Params.screen_x_y )
+				image_key = "wally_0{0}".format(i)
+				#  there are 3 sizes of image included by default; if none match the screen res, choose 1080p then scale
+				image_f = os.path.join(self.image_dir, image_key, "{0}.jpg".format(self.frame_size))
+				if not os.path.isfile(image_f):
+					image_f = os.path.join(self.image_dir, image_key, "1920x1080.jpg")
+					scale_images = True
+				self.backgrounds[image_key] = ([image_key, NumpySurface(image_f)])
+				if scale_images:
+					self.backgrounds[image_key][1].scale( Params.screen_x_y )
+				self.backgrounds[image_key][1] = self.backgrounds[image_key][1].render()
 
 	def block(self, block_num):
 		pass
@@ -128,10 +134,10 @@ class WaldoReplication(klibs.Experiment):
 			y1 = l[LOC][1] - self.search_disc.height // 2
 			y2 = l[LOC][1] + self.search_disc.height // 2
 			self.eyelink.add_gaze_boundary(boundary_name, [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
-		x1 = Params.screen_c[0] - kld.drift_correct_target().width
-		y1 = Params.screen_c[1] - kld.drift_correct_target().height
-		x2 = Params.screen_c[0] + kld.drift_correct_target().width
-		y2 = Params.screen_c[1] + kld.drift_correct_target().height
+		x1 = Params.screen_c[0] - kld.drift_correct_target().width * self.gaze_boundary_tolerance
+		y1 = Params.screen_c[1] - kld.drift_correct_target().height * self.gaze_boundary_tolerance
+		x2 = Params.screen_c[0] + kld.drift_correct_target().width * self.gaze_boundary_tolerance
+		y2 = Params.screen_c[1] + kld.drift_correct_target().height * self.gaze_boundary_tolerance
 		self.eyelink.add_gaze_boundary("trial_fixation", [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
 
 		self.drift_correct()
@@ -141,8 +147,8 @@ class WaldoReplication(klibs.Experiment):
 		self.blit(kld.drift_correct_target(), position=Params.screen_c, registration=5)
 		self.flip()
 		fixate_interval = Params.tk.countdown(0.7)
+		self.eyelink.start(Params.trial_number)
 		while fixate_interval.counting():
-			print self.eyelink.fetch_gaze_boundary("trial_fixation")
 			if not self.eyelink.within_boundary("trial_fixation"):
 				self.fill([255, 0, 0])
 				message_format = {"color": [255, 255, 255, 255],
@@ -165,21 +171,24 @@ class WaldoReplication(klibs.Experiment):
 			boundary = "saccade_{0}".format(self.locations.index(l))
 			Params.tk.start('rt')
 			dot_interval = Params.tk.countdown(0.500)
-			while dot_interval.counting():
-				self.refresh_background()
-				self.flip()
-			while not self.eyelink.within_boundary(boundary):
+			fixated = False
+			elapsed = False
+			while not (fixated and elapsed):
+				elapsed = not dot_interval.counting()
+				fixated = self.eyelink.within_boundary(boundary)
 				pump()
 				event_stack = sdl2.ext.get_events()
 				for e in event_stack:
 					self.over_watch(e)
+				Params.tk.start("refresh")
 				if visited_locations < len(self.locations):
 					self.refresh_background()
 				else:
 					self.refresh_background(False if self.bg_state == "present" else  True)
-
 				self.blit(self.search_disc, position=l[LOC], registration=5)
 				self.flip()
+				Params.tk.stop("refresh")
+				print "Elapsed: {0}".format(Params.tk.period("refresh"))
 			Params.tk.stop('rt')
 			if visited_locations == len(self.locations):
 				rt = Params.tk.period('rt')
@@ -230,7 +239,7 @@ class WaldoReplication(klibs.Experiment):
 		self.fill()
 		if self.bg_state != "absent" and remove_bg is False: self.blit(self.bg[1])
 		if not Params.eye_tracker_available:
-			self.blit(kld.Circle(12, [3, [0, 0, 0]], [255, 0, 0]), position=mouse_pos(), registration=5)
+			self.blit(self.mouse_dot, position=mouse_pos(), registration=5)
 
 	# Following two functions are used in setup and trial prep to generate the saccade path, not used in trial
 	def generate_locations(self, saccade_count):
