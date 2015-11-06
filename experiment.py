@@ -23,13 +23,13 @@ Params.default_fill_color = (100, 100, 100, 255)  # TODO: rotate through seasons
 
 Params.debug_level = 0
 
-Params.collect_demographics = False
+Params.collect_demographics = True
 Params.practicing = False
 Params.eye_tracking = True
-Params.eye_tracker_available = False
+Params.eye_tracker_available = True
 
-Params.blocks_per_experiment = 2
-Params.trials_per_block = 126
+Params.blocks_per_experiment = 4
+Params.trials_per_block = 81
 Params.practice_blocks_per_experiment = 1
 Params.trials_per_practice_block = 1
 Params.manual_trial_generation = False
@@ -59,13 +59,13 @@ def null_trial_generator(exp_factors):
 
 
 class WaldoReplication(klibs.Experiment):
+	debug_gaze = False 
 	max_amplitude_deg = 8  # degrees of visual angle
 	min_amplitude_deg = 2  # degrees of visual angle
 	max_amplitude = None  # px
 	min_amplitude = None  # px
 	min_saccades = 5
 	max_saccades = 12
-	n_back = None
 	dot_diameter_deg = 0.5
 	dot_diameter = None
 	search_disc = None
@@ -73,7 +73,9 @@ class WaldoReplication(klibs.Experiment):
 	min_fixation = 20
 	max_fixation = 500
 	allow_intermittent_bg = True
-	gaze_boundary_tolerance = 3  # if drift_correct target too small to fixate, use this to scale boundary (not image)
+	fixation_boundary_tolerance = 3  # if drift_correct target too small to fixate, use this to scale boundary (not image)
+	disc_boundary_tolerance = 1.5  # if drift_correct target too small to fixate, use this to scale boundary (not image)
+	unfound_target_timeout = 2.5  # seconds
 
 	# trial vars
 	locations = []
@@ -83,6 +85,7 @@ class WaldoReplication(klibs.Experiment):
 	bg_state = None
 	saccade_count = None
 	frame_size = "1024x768"
+	n_back = None
 
 	def __init__(self, *args, **kwargs):
 		super(WaldoReplication, self).__init__(*args, **kwargs)
@@ -109,7 +112,7 @@ class WaldoReplication(klibs.Experiment):
 				pump()
 				image_key = "wally_0{0}".format(i)
 				#  there are 3 sizes of image included by default; if none match the screen res, choose 1080p then scale
-				image_f = os.path.join(self.image_dir, image_key, "{0}.jpg".format(self.frame_size))
+				image_f = os.path.join(self.image_dir, image_key, "{0}x{1}.jpg".format(Params.screen_x, Params.screen_y))
 				if not os.path.isfile(image_f):
 					image_f = os.path.join(self.image_dir, image_key, "1920x1080.jpg")
 					scale_images = True
@@ -119,27 +122,28 @@ class WaldoReplication(klibs.Experiment):
 				self.backgrounds[image_key][1] = self.backgrounds[image_key][1].render()
 
 	def block(self, block_num):
-		pass
+		self.block_break()
 
 	def trial_prep(self, trial_factors):
 		self.database.init_entry('trials')
 		self.trial_type = trial_factors[2]
+		self.n_back = int(trial_factors[4])
 		self.saccade_count = self.generate_locations(random.choice(range(self.min_saccades, self.max_saccades)))
 		self.bg_state = trial_factors[3]
 		self.bg = self.backgrounds[trial_factors[1]]
 		for l in self.locations:
 			boundary_name = "saccade_{0}".format(self.locations.index(l))
-			x1 = l[LOC][0] - self.search_disc.width // 2
-			x2 = l[LOC][0] + self.search_disc.width // 2
-			y1 = l[LOC][1] - self.search_disc.height // 2
-			y2 = l[LOC][1] + self.search_disc.height // 2
+			padded_disc_projection = int((self.search_disc.width * self.disc_boundary_tolerance) // 2)
+			x1 = l[LOC][0] - padded_disc_projection
+			x2 = l[LOC][0] + padded_disc_projection
+			y1 = l[LOC][1] - padded_disc_projection
+			y2 = l[LOC][1] + padded_disc_projection
 			self.eyelink.add_gaze_boundary(boundary_name, [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
-		x1 = Params.screen_c[0] - kld.drift_correct_target().width * self.gaze_boundary_tolerance
-		y1 = Params.screen_c[1] - kld.drift_correct_target().height * self.gaze_boundary_tolerance
-		x2 = Params.screen_c[0] + kld.drift_correct_target().width * self.gaze_boundary_tolerance
-		y2 = Params.screen_c[1] + kld.drift_correct_target().height * self.gaze_boundary_tolerance
+		x1 = Params.screen_c[0] - kld.drift_correct_target().width * self.fixation_boundary_tolerance
+		y1 = Params.screen_c[1] - kld.drift_correct_target().height * self.fixation_boundary_tolerance
+		x2 = Params.screen_c[0] + kld.drift_correct_target().width * self.fixation_boundary_tolerance
+		y2 = Params.screen_c[1] + kld.drift_correct_target().height * self.fixation_boundary_tolerance
 		self.eyelink.add_gaze_boundary("trial_fixation", [(x1, y1), (x2, y2)], EL_RECT_BOUNDARY)
-
 		self.drift_correct()
 
 	def trial(self, trial_factors):
@@ -163,39 +167,54 @@ class WaldoReplication(klibs.Experiment):
 				self.blit(kld.drift_correct_target(), position=Params.screen_c, registration=5)
 		self.fill()
 		if self.bg_state != "absent": self.blit(self.bg[1])
-		rt = None
+		rt = -1
 		location = None
 		visited_locations = 0  # on OLD trials, matching self.locations.index(l) to len(self.locations) - 1 doesn't work
+		timed_out = False
 		for l in self.locations:
+			if timed_out:
+				location = {AMP:-1, ANG: -1, LOC: (-1,-1)}
+				break
 			visited_locations += 1
 			boundary = "saccade_{0}".format(self.locations.index(l))
 			Params.tk.start('rt')
 			dot_interval = Params.tk.countdown(0.500)
 			fixated = False
 			elapsed = False
+			timeout_countdown = Params.tk.countdown(self.unfound_target_timeout)
 			while not (fixated and elapsed):
+				timed_out = not timeout_countdown.counting()
+				if timed_out:
+					break
 				elapsed = not dot_interval.counting()
-				fixated = self.eyelink.within_boundary(boundary)
-				pump()
-				event_stack = sdl2.ext.get_events()
-				for e in event_stack:
-					self.over_watch(e)
-				Params.tk.start("refresh")
+				gaze = self.eyelink.gaze()
+				fixated = self.eyelink.within_boundary(boundary, gaze)
 				if visited_locations < len(self.locations):
 					self.refresh_background()
 				else:
 					self.refresh_background(False if self.bg_state == "present" else  True)
 				self.blit(self.search_disc, position=l[LOC], registration=5)
+				if self.debug_gaze:
+					self.blit(self.mouse_dot, position=gaze, registration=5)
+					self.eyelink.draw_gaze_boundary(boundary)
+				if Params.debug_level > 0:
+					self.debug_print_trial_factors()
 				self.flip()
-				Params.tk.stop("refresh")
-				print "Elapsed: {0}".format(Params.tk.period("refresh"))
-			Params.tk.stop('rt')
+				event_stack = sdl2.ext.get_events()
+				for e in event_stack:
+					self.over_watch(e)
+				pump()
 			if visited_locations == len(self.locations):
+				Params.tk.stop('rt')
 				rt = Params.tk.period('rt')
 				location = l
+				
+		self.eyelink.stop()		
+
 		return {"trial_num": Params.trial_number,
 				"block_num": Params.block_number,
 				"bg_image": self.bg[0],
+				"timed_out": str(timed_out),
 				"rt": rt,
 				"target_type": self.trial_type,
 				"bg_state": self.bg_state,
@@ -225,13 +244,12 @@ class WaldoReplication(klibs.Experiment):
 				index += 1
 				self.database.insert(l, 'trial_locations', False)
 		self.eyelink.clear_gaze_boundaries()
-		self.locations = []
+		self.locations = None
 		self.trial_type = None
 		self.bg = None
 		self.bg_state = None
 		self.saccade_count = None
-
-
+	
 	def clean_up(self):
 		pass
 
@@ -243,6 +261,7 @@ class WaldoReplication(klibs.Experiment):
 
 	# Following two functions are used in setup and trial prep to generate the saccade path, not used in trial
 	def generate_locations(self, saccade_count):
+		self.locations = []
 		n_back_index = saccade_count - (2 + self.n_back)  # 1 for index, 1 b/c  n_back counts from penultimate saccade
 		while len(self.locations) != saccade_count:
 			try:
@@ -256,10 +275,9 @@ class WaldoReplication(klibs.Experiment):
 				n_back = self.locations[n_back_index]
 			except IndexError:
 				n_back = None
-
 			####### FINAL SACCADE ######
 			if len(self.locations) == saccade_count - 1:
-				if self.trial_type == NEW:
+				if self.trial_type > 0:  # ie. angle > 0: new location, angle == 0: n-back
 					amplitude = int(math.ceil(line_segment_len(n_back[LOC], prev_loc)))
 					angles = [(a + self.locations[-1][ANG] % 90) % 360 for a in range(0, 360, 60)]
 					possible_locations = [self.new_location(prev_loc, a, amplitude) for a in angles]
@@ -321,7 +339,9 @@ class WaldoReplication(klibs.Experiment):
 			else:
 				x_loc = prev_loc[0]
 				y_loc = prev_loc[1] - amplitude
-		if 0 < x_loc < Params.screen_x - self.screen_pad and 0 < y_loc < Params.screen_y - self.screen_pad:
+		x_ok = self.screen_pad < x_loc < Params.screen_x - self.screen_pad 
+		y_ok = self.screen_pad < y_loc < Params.screen_y - self.screen_pad
+		if x_ok and y_ok:
 			return [x_loc, y_loc]
 		return False
 

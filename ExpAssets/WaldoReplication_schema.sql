@@ -49,6 +49,7 @@ CREATE TABLE trials (
 	n_back integer not null,
 	bg_image text not null,
 	bg_state text not null,
+	timed_out text not null,
 	rt integer not null,
 	target_type text not null, /* ie. OLD vs NEW */
 	amplitude integer not null,

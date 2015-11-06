@@ -1,6 +1,6 @@
 bg_image.param,angle.param,bg_state.param,n_back.param,trial_count.param
 wally_01,0,present,1
-wally_02,60,absent,
+wally_02,60,absent,2
 wally_03,120,intermittent,
 wally_04,180,,
 wally_05,240,,
