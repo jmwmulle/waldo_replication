@@ -30,8 +30,8 @@ Params.eye_tracker_available = False
 
 Params.blocks_per_experiment = 2
 Params.trials_per_block = 126
-Params.practice_blocks_per_experiment = 1
-Params.trials_per_practice_block = 1
+Params.practice_blocks_per_experiment = 0
+Params.trials_per_practice_block = 0
 Params.manual_trial_generation = False
 
 # I hate retyping strings.
