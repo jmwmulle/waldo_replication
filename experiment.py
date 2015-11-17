@@ -29,7 +29,7 @@ Params.eye_tracking = True
 Params.eye_tracker_available = True
 
 Params.blocks_per_experiment = 4
-Params.trials_per_block = 81
+Params.trials_per_block = 63
 Params.practice_blocks_per_experiment = 1
 Params.trials_per_practice_block = 1
 Params.manual_trial_generation = False
@@ -172,16 +172,14 @@ class WaldoReplication(klibs.Experiment):
 		visited_locations = 0  # on OLD trials, matching self.locations.index(l) to len(self.locations) - 1 doesn't work
 		timed_out = False
 		for l in self.locations:
-			if timed_out:
-				location = {AMP:-1, ANG: -1, LOC: (-1,-1)}
-				break
 			visited_locations += 1
 			boundary = "saccade_{0}".format(self.locations.index(l))
-			Params.tk.start('rt')
 			dot_interval = Params.tk.countdown(0.500)
 			fixated = False
 			elapsed = False
 			timeout_countdown = Params.tk.countdown(self.unfound_target_timeout)
+			# Params.tk.start('rt')	
+			rt_start = time.time()
 			while not (fixated and elapsed):
 				timed_out = not timeout_countdown.counting()
 				if timed_out:
@@ -189,6 +187,12 @@ class WaldoReplication(klibs.Experiment):
 				elapsed = not dot_interval.counting()
 				gaze = self.eyelink.gaze()
 				fixated = self.eyelink.within_boundary(boundary, gaze)
+				if fixated and rt == -1:
+					if visited_locations == len(self.locations):
+						# Params.tk.stop('rt')
+						# rt = Params.tk.period('rt')
+						rt = time.time() - rt_start
+						location = l
 				if visited_locations < len(self.locations):
 					self.refresh_background()
 				else:
@@ -204,11 +208,9 @@ class WaldoReplication(klibs.Experiment):
 				for e in event_stack:
 					self.over_watch(e)
 				pump()
-			if visited_locations == len(self.locations):
-				Params.tk.stop('rt')
-				rt = Params.tk.period('rt')
-				location = l
-				
+		if timed_out or location is None:
+			location = {AMP:-1, ANG: -1, LOC: (-1,-1)}
+		
 		self.eyelink.stop()		
 
 		return {"trial_num": Params.trial_number,
@@ -276,7 +278,7 @@ class WaldoReplication(klibs.Experiment):
 			except IndexError:
 				n_back = None
 			####### FINAL SACCADE ######
-			if len(self.locations) == saccade_count - 1:
+			if len(self.locations) == saccade_count - 1 and n_back is not None:
 				if self.trial_type > 0:  # ie. angle > 0: new location, angle == 0: n-back
 					amplitude = int(math.ceil(line_segment_len(n_back[LOC], prev_loc)))
 					angles = [(a + self.locations[-1][ANG] % 90) % 360 for a in range(0, 360, 60)]
