@@ -94,7 +94,6 @@ class WaldoReplication(klibs.Experiment):
 		self.dot_diameter = deg_to_px(self.dot_diameter_deg)
 		self.screen_pad = self.dot_diameter * 1.5
 		self.search_disc = kld.Annulus(self.dot_diameter * 3, 10, fill=[0, 0, 0, 255])
-		self.image_dir = os.path.join(Params.asset_path, "image")
 		self.mouse_dot = kld.Circle(12, [3, [0, 0, 0]], [255, 0, 0])
 
 	def setup(self):
@@ -112,9 +111,9 @@ class WaldoReplication(klibs.Experiment):
 				pump()
 				image_key = "wally_0{0}".format(i)
 				#  there are 3 sizes of image included by default; if none match the screen res, choose 1080p then scale
-				image_f = os.path.join(self.image_dir, image_key, "{0}x{1}.jpg".format(Params.screen_x, Params.screen_y))
+				image_f = os.path.join(Params.image_dir, image_key, "{0}x{1}.jpg".format(Params.screen_x, Params.screen_y))
 				if not os.path.isfile(image_f):
-					image_f = os.path.join(self.image_dir, image_key, "1920x1080.jpg")
+					image_f = os.path.join(Params.image_dir, image_key, "1920x1080.jpg")
 					scale_images = True
 				self.backgrounds[image_key] = ([image_key, NumpySurface(image_f)])
 				if scale_images:
@@ -129,11 +128,13 @@ class WaldoReplication(klibs.Experiment):
 		self.trial_type = trial_factors[2]
 		self.n_back = int(trial_factors[4])
 		self.saccade_count = self.generate_locations(random.choice(range(self.min_saccades, self.max_saccades)))
+		self.flip(5)
+		self.quit()
 		self.bg_state = trial_factors[3]
 		self.bg = self.backgrounds[trial_factors[1]]
 		for l in self.locations:
 			boundary_name = "saccade_{0}".format(self.locations.index(l))
-			padded_disc_projection = int((self.search_disc.width * self.disc_boundary_tolerance) // 2)
+			padded_disc_projection = int((self.search_disc.surface_width * self.disc_boundary_tolerance) // 2)
 			x1 = l[LOC][0] - padded_disc_projection
 			x2 = l[LOC][0] + padded_disc_projection
 			y1 = l[LOC][1] - padded_disc_projection
@@ -157,6 +158,7 @@ class WaldoReplication(klibs.Experiment):
 				self.fill([255, 0, 0])
 				message_format = {"color": [255, 255, 255, 255],
 								  "font_size": 64,
+
 								  "registration": 5,
 								  "location": Params.screen_c}
 				self.message("Looked away too soon.", **message_format)
@@ -202,12 +204,12 @@ class WaldoReplication(klibs.Experiment):
 				self.flip()
 				event_stack = sdl2.ext.get_events()
 				for e in event_stack:
-					self.over_watch(e)
+					self.ui_request(e)
 				pump()
-			if visited_locations == len(self.locations):
-				Params.tk.stop('rt')
-				rt = Params.tk.period('rt')
-				location = l
+				if visited_locations == len(self.locations):
+					Params.tk.stop('rt')
+					rt = Params.tk.period('rt')
+					location = l
 				
 		self.eyelink.stop()		
 
@@ -281,6 +283,11 @@ class WaldoReplication(klibs.Experiment):
 					amplitude = int(math.ceil(line_segment_len(n_back[LOC], prev_loc)))
 					angles = [(a + self.locations[-1][ANG] % 90) % 360 for a in range(0, 360, 60)]
 					possible_locations = [self.new_location(prev_loc, a, amplitude) for a in angles]
+					print possible_locations
+					for l in possible_locations:
+						self.blit(self.search_disc, position=l, registration=5)
+					self.flip(5)
+					self.quit()
 					location = random.choice(possible_locations)
 					angle = possible_locations.index(location) * 60
 				else:
@@ -324,17 +331,17 @@ class WaldoReplication(klibs.Experiment):
 			B = math.radians(float(90 - quadrant_angle))
 			d_x = int(math.sin(B) * amplitude) * x_sign
 			d_y = int(math.sin(A) * amplitude) * y_sign
-			x_loc = prev_loc[0] - d_x
-			y_loc = prev_loc[1] - d_y
+			x_loc = prev_loc[0] + d_x
+			y_loc = prev_loc[1] + d_y
 		else:
 			if angle in (0, 360):
-				x_loc = prev_loc[0] + amplitude
+				x_loc = prev_loc[0] - amplitude
 				y_loc = prev_loc[1]
 			elif angle == 90:
 				x_loc = prev_loc[0]
 				y_loc = prev_loc[1] + amplitude
 			elif angle == 180:
-				x_loc = prev_loc[0] - amplitude
+				x_loc = prev_loc[0] + amplitude
 				y_loc = prev_loc[1]
 			else:
 				x_loc = prev_loc[0]
