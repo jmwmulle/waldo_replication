@@ -19,6 +19,8 @@ import klibs.KLDraw as kld
 # import aggdraw
 import random
 
+Params.dm_suppress_debug_pane = True
+
 Params.default_fill_color = (100, 100, 100, 255)  # TODO: rotate through seasons
 
 Params.debug_level = 0
@@ -26,7 +28,7 @@ Params.debug_level = 0
 Params.collect_demographics = True
 Params.practicing = False
 Params.eye_tracking = True
-Params.eye_tracker_available = True
+Params.eye_tracker_available = False
 
 Params.blocks_per_experiment = 2
 Params.trials_per_block = 126
@@ -128,8 +130,6 @@ class WaldoReplication(klibs.Experiment):
 		self.trial_type = trial_factors[2]
 		self.n_back = int(trial_factors[4])
 		self.saccade_count = self.generate_locations(random.choice(range(self.min_saccades, self.max_saccades)))
-		self.flip(5)
-		self.quit()
 		self.bg_state = trial_factors[3]
 		self.bg = self.backgrounds[trial_factors[1]]
 		for l in self.locations:
@@ -283,11 +283,6 @@ class WaldoReplication(klibs.Experiment):
 					amplitude = int(math.ceil(line_segment_len(n_back[LOC], prev_loc)))
 					angles = [(a + self.locations[-1][ANG] % 90) % 360 for a in range(0, 360, 60)]
 					possible_locations = [self.new_location(prev_loc, a, amplitude) for a in angles]
-					print possible_locations
-					for l in possible_locations:
-						self.blit(self.search_disc, position=l, registration=5)
-					self.flip(5)
-					self.quit()
 					location = random.choice(possible_locations)
 					angle = possible_locations.index(location) * 60
 				else:
