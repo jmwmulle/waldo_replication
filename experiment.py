@@ -28,7 +28,7 @@ Params.debug_level = 0
 Params.collect_demographics = True
 Params.practicing = False
 Params.eye_tracking = True
-Params.eye_tracker_available = False
+Params.eye_tracker_available = True
 
 
 Params.blocks_per_experiment = 4
@@ -122,6 +122,10 @@ class WaldoReplication(klibs.Experiment):
 				if scale_images:
 					self.backgrounds[image_key][1].scale( Params.screen_x_y )
 				self.backgrounds[image_key][1] = self.backgrounds[image_key][1].render()
+		message_format = {"color": [255, 255, 255, 255],
+		  "font_size": 64,
+		  "blit": False}
+		self.eyes_moved_message = self.message("Looked away too soon.", **message_format)
 
 	def block(self, block_num):
 		self.block_break()
@@ -157,13 +161,11 @@ class WaldoReplication(klibs.Experiment):
 		while fixate_interval.counting():
 			if not self.eyelink.within_boundary("trial_fixation"):
 				self.fill([255, 0, 0])
-				message_format = {"color": [255, 255, 255, 255],
-								  "font_size": 64,
-
-								  "registration": 5,
-								  "location": Params.screen_c}
-				self.message("Looked away too soon.", **message_format)
-				self.flip(1)
+				message_interval = Params.tk.countdown(1)
+				while message_interval.counting():
+					self.fill()
+					self.blit(self.eyes_moved_message, position=Params.screen_c, registration=5)			
+					self.flip()
 				raise TrialException("Gaze out of bounds.")
 			else:
 				self.refresh_background()
@@ -181,7 +183,7 @@ class WaldoReplication(klibs.Experiment):
 			fixated = False
 			elapsed = False
 			timeout_countdown = Params.tk.countdown(self.unfound_target_timeout)
-			# Params.tk.start('rt')	
+			Params.tk.start('rt')	
 			rt_start = time.time()
 			while not (fixated and elapsed):
 				timed_out = not timeout_countdown.counting()
@@ -192,8 +194,8 @@ class WaldoReplication(klibs.Experiment):
 				fixated = self.eyelink.within_boundary(boundary, gaze)
 				if fixated and rt == -1:
 					if visited_locations == len(self.locations):
-						# Params.tk.stop('rt')
-						# rt = Params.tk.period('rt')
+						Params.tk.stop('rt')
+						rt = Params.tk.period('rt')
 						rt = time.time() - rt_start
 						location = l
 				if visited_locations < len(self.locations):
