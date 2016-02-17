@@ -62,7 +62,6 @@ def null_trial_generator(exp_factors):
 
 
 class WaldoReplication(klibs.Experiment):
-	debug_gaze = False 
 	max_amplitude_deg = 8  # degrees of visual angle
 	min_amplitude_deg = 2  # degrees of visual angle
 	max_amplitude = None  # px
@@ -79,6 +78,7 @@ class WaldoReplication(klibs.Experiment):
 	fixation_boundary_tolerance = 3  # if drift_correct target too small to fixate, use this to scale boundary (not image)
 	disc_boundary_tolerance = 1.5  # if drift_correct target too small to fixate, use this to scale boundary (not image)
 	unfound_target_timeout = 2.5  # seconds
+	looked_away_msg = None
 
 	# trial vars
 	locations = []
@@ -102,11 +102,9 @@ class WaldoReplication(klibs.Experiment):
 	def setup(self):
 		Params.key_maps['WaldoReplication_response'] = klibs.KeyMap('WaldoReplication_response', [], [], [])
 		self.fill(Params.default_fill_color)
-		msg_format = {"color": [245, 255, 235, 255],
-				  "location": Params.screen_c,
-				  "registration": 5,
-				  "font_size": 64}
-		self.message("Loading, please hold...", **msg_format)
+		self.text_manager.add_style("msg", 64, [245,255,235,255])
+		self.looked_away_msg = self.message("Looked away too soon.", "msg", blit=False)
+		self.message("Loading, please hold...", "msg")
 		self.flip(0.1)
 		if not Params.testing:
 			scale_images = False
@@ -149,25 +147,19 @@ class WaldoReplication(klibs.Experiment):
 		self.drift_correct()
 
 	def trial(self, trial_factors):
-		self.refresh_background()
-		self.blit(kld.drift_correct_target(), position=Params.screen_c, registration=5)
-		self.flip()
+		self.refresh_background(False, True, True)
 		fixate_interval = Params.tk.countdown(0.7)
 		self.eyelink.start(Params.trial_number)
 		while fixate_interval.counting():
 			if not self.eyelink.within_boundary("trial_fixation"):
-				self.fill([255, 0, 0])
-				message_format = {"color": [255, 255, 255, 255],
-								  "font_size": 64,
-
-								  "registration": 5,
-								  "location": Params.screen_c}
-				self.message("Looked away too soon.", **message_format)
-				self.flip(1)
+				error_msg_countdown = Params.tk.countdown(1)
+				while error_msg_countdown.counting():
+					self.fill([255, 0, 0])
+					self.blit(self.looked_away_msg, location="center", registration="center")
+					self.flip()
 				raise TrialException("Gaze out of bounds.")
 			else:
-				self.refresh_background()
-				self.blit(kld.drift_correct_target(), position=Params.screen_c, registration=5)
+				self.refresh_background(False, True, True)
 		self.fill()
 		if self.bg_state != "absent": self.blit(self.bg[1])
 		rt = -1
@@ -184,8 +176,8 @@ class WaldoReplication(klibs.Experiment):
 			# Params.tk.start('rt')	
 			rt_start = time.time()
 			while not (fixated and elapsed):
-				timed_out = not timeout_countdown.counting()
-				if timed_out:
+				if not timeout_countdown.counting():
+					timed_out = True
 					break
 				elapsed = not dot_interval.counting()
 				gaze = self.eyelink.gaze()
@@ -196,17 +188,8 @@ class WaldoReplication(klibs.Experiment):
 						# rt = Params.tk.period('rt')
 						rt = time.time() - rt_start
 						location = l
-				if visited_locations < len(self.locations):
-					self.refresh_background()
-				else:
-					self.refresh_background(False if self.bg_state == "present" else  True)
-				self.blit(self.search_disc, position=l[LOC], registration=5)
-				if self.debug_gaze:
-					self.blit(self.mouse_dot, position=gaze, registration=5)
-					self.eyelink.draw_gaze_boundary(boundary)
-				if Params.debug_level > 0:
-					self.debug_print_trial_factors()
-				self.flip()
+				rem_bg = False if visited_locations < len(self.locations) or self.bg_state == "present" else True
+				self.refresh_background(rem_bg, flip=True, disc_loc=l[LOC])
 				event_stack = sdl2.ext.get_events()
 				for e in event_stack:
 					self.ui_request(e)
@@ -233,25 +216,25 @@ class WaldoReplication(klibs.Experiment):
 				"saccades": len(self.locations)}
 
 	def trial_clean_up(self, trial_id, trial_factors):
-		if trial_id:  # ie. if this isn't a recycled trial
-			index = 0
-			for loc in self.locations:
-				l = {
-					'participant_id': Params.participant_id,
-					'trial_id': trial_id,
-					'trial_num': Params.trial_number,
-					'block_num': Params.block_number,
-					'location_num': index + 1,
-					'x': loc[LOC][0],
-					'y': loc[LOC][1],
-					'amplitude': loc[AMP],
-					'angle': loc[ANG],
-					'n_back': self.saccade_count - (self.n_back + 2) == index,
-					'penultimate': index + 2 == self.saccade_count,
-					'final': index + 1 == self.saccade_count,
-				}
-				index += 1
-				self.database.insert(l, 'trial_locations', False)
+		# if trial_id:  # ie. if this isn't a recycled trial
+		# 	index = 0
+		# 	for loc in self.locations:
+		# 		l = {
+		# 			'participant_id': Params.participant_id,
+		# 			'trial_id': trial_id,
+		# 			'trial_num': Params.trial_number,
+		# 			'block_num': Params.block_number,
+		# 			'location_num': index + 1,
+		# 			'x': loc[LOC][0],
+		# 			'y': loc[LOC][1],
+		# 			'amplitude': loc[AMP],
+		# 			'angle': loc[ANG],
+		# 			'n_back': self.saccade_count - (self.n_back + 2) == index,
+		# 			'penultimate': index + 2 == self.saccade_count,
+		# 			'final': index + 1 == self.saccade_count,
+		# 		}
+		# 		index += 1
+		# 		self.database.insert(l, 'trial_locations', False)
 		self.eyelink.clear_gaze_boundaries()
 		self.locations = None
 		self.trial_type = None
@@ -262,11 +245,17 @@ class WaldoReplication(klibs.Experiment):
 	def clean_up(self):
 		pass
 
-	def refresh_background(self, remove_bg=False):
+	def refresh_background(self, remove_bg=False, drift_correct=False, flip=False, disc_loc=None):
 		self.fill()
+		if drift_correct:
+			self.blit(kld.drift_correct_target(), position=Params.screen_c, registration=5)
 		if self.bg_state != "absent" and remove_bg is False: self.blit(self.bg[1])
 		if not Params.eye_tracker_available:
 			self.blit(self.mouse_dot, position=mouse_pos(), registration=5)
+		if disc_loc:
+			self.blit(self.search_disc, position=disc_loc, registration=5)
+		if flip:
+			self.flip()
 
 	# Following two functions are used in setup and trial prep to generate the saccade path, not used in trial
 	def generate_locations(self, saccade_count):
