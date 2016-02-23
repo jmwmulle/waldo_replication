@@ -28,7 +28,7 @@ Params.debug_level = 0
 Params.collect_demographics = True
 Params.practicing = False
 Params.eye_tracking = True
-Params.eye_tracker_available = False
+Params.eye_tracker_available = True
 
 
 Params.blocks_per_experiment = 4
@@ -120,6 +120,10 @@ class WaldoReplication(klibs.Experiment):
 				if scale_images:
 					self.backgrounds[image_key][1].scale( Params.screen_x_y )
 				self.backgrounds[image_key][1] = self.backgrounds[image_key][1].render()
+		message_format = {"color": [255, 255, 255, 255],
+		  "font_size": 64,
+		  "blit": False}
+		self.eyes_moved_message = self.message("Looked away too soon.", **message_format)
 
 	def block(self, block_num):
 		self.block_break()
@@ -172,7 +176,7 @@ class WaldoReplication(klibs.Experiment):
 			fixated = False
 			elapsed = False
 			timeout_countdown = Params.tk.countdown(self.unfound_target_timeout)
-			# Params.tk.start('rt')	
+			Params.tk.start('rt')	
 			rt_start = time.time()
 			while not (fixated and elapsed):
 				if not timeout_countdown.counting():
@@ -183,8 +187,8 @@ class WaldoReplication(klibs.Experiment):
 				fixated = self.eyelink.within_boundary(boundary, gaze)
 				if fixated and rt == -1:
 					if visited_locations == len(self.locations):
-						# Params.tk.stop('rt')
-						# rt = Params.tk.period('rt')
+						Params.tk.stop('rt')
+						rt = Params.tk.period('rt')
 						rt = time.time() - rt_start
 						location = l
 				rem_bg = False if visited_locations < len(self.locations) or self.bg_state == "present" else True
