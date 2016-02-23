@@ -19,20 +19,17 @@ import klibs.KLDraw as kld
 # import aggdraw
 import random
 
-Params.dm_suppress_debug_pane = True
+
 
 Params.default_fill_color = (100, 100, 100, 255)  # TODO: rotate through seasons
-
-Params.debug_level = 0
-
 Params.collect_demographics = True
 Params.practicing = False
 Params.eye_tracking = True
 Params.eye_tracker_available = True
-
+Params.pre_render_block_messages = True
 
 Params.blocks_per_experiment = 4
-Params.trials_per_block = 63
+Params.trials_per_block = 2
 Params.practice_blocks_per_experiment = 1
 Params.trials_per_practice_block = 1
 Params.manual_trial_generation = False
@@ -79,6 +76,7 @@ class WaldoReplication(klibs.Experiment):
 	disc_boundary_tolerance = 1.5  # if drift_correct target too small to fixate, use this to scale boundary (not image)
 	unfound_target_timeout = 2.5  # seconds
 	looked_away_msg = None
+	eyes_moved_message = None
 
 	# trial vars
 	locations = []
@@ -219,25 +217,25 @@ class WaldoReplication(klibs.Experiment):
 				"saccades": len(self.locations)}
 
 	def trial_clean_up(self, trial_id, trial_factors):
-		# if trial_id:  # ie. if this isn't a recycled trial
-		# 	index = 0
-		# 	for loc in self.locations:
-		# 		l = {
-		# 			'participant_id': Params.participant_id,
-		# 			'trial_id': trial_id,
-		# 			'trial_num': Params.trial_number,
-		# 			'block_num': Params.block_number,
-		# 			'location_num': index + 1,
-		# 			'x': loc[LOC][0],
-		# 			'y': loc[LOC][1],
-		# 			'amplitude': loc[AMP],
-		# 			'angle': loc[ANG],
-		# 			'n_back': self.saccade_count - (self.n_back + 2) == index,
-		# 			'penultimate': index + 2 == self.saccade_count,
-		# 			'final': index + 1 == self.saccade_count,
-		# 		}
-		# 		index += 1
-		# 		self.database.insert(l, 'trial_locations', False)
+		if trial_id:  # ie. if this isn't a recycled trial
+			index = 0
+			for loc in self.locations:
+				l = {
+					'participant_id': Params.participant_id,
+					'trial_id': trial_id,
+					'trial_num': Params.trial_number,
+					'block_num': Params.block_number,
+					'location_num': index + 1,
+					'x': loc[LOC][0],
+					'y': loc[LOC][1],
+					'amplitude': loc[AMP],
+					'angle': loc[ANG],
+					'n_back': self.saccade_count - (self.n_back + 2) == index,
+					'penultimate': index + 2 == self.saccade_count,
+					'final': index + 1 == self.saccade_count,
+				}
+				index += 1
+				self.database.insert(l, 'trial_locations', False)
 		self.eyelink.clear_gaze_boundaries()
 		self.locations = None
 		self.trial_type = None

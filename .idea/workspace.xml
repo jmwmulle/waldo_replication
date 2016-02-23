@@ -44,16 +44,16 @@
       <file leaf-file-name="experiment.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/experiment.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="124" column="20" selection-start="3715" selection-end="3715" vertical-scroll-proportion="0.180131" vertical-offset="1485" max-vertical-offset="3825">
+            <state line="45" column="19" selection-start="1000" selection-end="1000" vertical-scroll-proportion="0.73689955" vertical-offset="0" max-vertical-offset="3855">
               <folding>
                 <element signature="e#26#38#0" expanded="true" />
-                <element signature="e#1009#1072#0" expanded="true" />
-                <element signature="e#2610#3670#0" expanded="true" />
-                <element signature="e#3763#5016#0" expanded="true" />
-                <element signature="e#5053#7409#0" expanded="true" />
-                <element signature="e#7465#8282#0" expanded="true" />
-                <element signature="e#8308#8312#0" expanded="true" />
-                <element signature="e#8412#8819#0" expanded="true" />
+                <element signature="e#2613#3848#0" expanded="true" />
+                <element signature="e#3881#3899#0" expanded="true" />
+                <element signature="e#3941#5194#0" expanded="true" />
+                <element signature="e#5231#7581#0" expanded="true" />
+                <element signature="e#7637#8416#0" expanded="true" />
+                <element signature="e#8442#8446#0" expanded="true" />
+                <element signature="e#8546#8953#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -72,8 +72,8 @@
         <option value="$PROJECT_DIR$/ExpAssets/WaldoReplication_schema.sql" />
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/ExpAssets/WaldoReplication_config.csv" />
-        <option value="$PROJECT_DIR$/experiment.py" />
         <option value="/usr/local/lib/python2.7/site-packages/klibs/KLExperiment.py" />
+        <option value="$PROJECT_DIR$/experiment.py" />
       </list>
     </option>
   </component>
@@ -380,7 +380,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-5" y="23" width="2560" height="1413" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26991493" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -430,13 +430,13 @@
         <state line="153" column="0" selection-start="5221" selection-end="5221" vertical-scroll-proportion="0.0" vertical-offset="2295" max-vertical-offset="2850">
           <folding>
             <element signature="e#26#38#0" expanded="true" />
-            <element signature="e#1009#1072#0" expanded="true" />
-            <element signature="e#2610#3670#0" expanded="true" />
-            <element signature="e#3763#5016#0" expanded="true" />
-            <element signature="e#5053#7409#0" expanded="true" />
-            <element signature="e#7465#8282#0" expanded="true" />
-            <element signature="e#8308#8312#0" expanded="true" />
-            <element signature="e#8412#8819#0" expanded="true" />
+            <element signature="e#2613#3848#0" expanded="true" />
+            <element signature="e#3881#3899#0" expanded="true" />
+            <element signature="e#3941#5194#0" expanded="true" />
+            <element signature="e#5231#7581#0" expanded="true" />
+            <element signature="e#7637#8416#0" expanded="true" />
+            <element signature="e#8442#8446#0" expanded="true" />
+            <element signature="e#8546#8953#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -463,13 +463,13 @@
         <state line="112" column="79" selection-start="3124" selection-end="3124" vertical-scroll-proportion="0.0" vertical-offset="1680" max-vertical-offset="3540">
           <folding>
             <element signature="e#26#38#0" expanded="true" />
-            <element signature="e#1009#1072#0" expanded="true" />
-            <element signature="e#2610#3670#0" expanded="true" />
-            <element signature="e#3763#5016#0" expanded="true" />
-            <element signature="e#5053#7409#0" expanded="true" />
-            <element signature="e#7465#8282#0" expanded="true" />
-            <element signature="e#8308#8312#0" expanded="true" />
-            <element signature="e#8412#8819#0" expanded="true" />
+            <element signature="e#2613#3848#0" expanded="true" />
+            <element signature="e#3881#3899#0" expanded="true" />
+            <element signature="e#3941#5194#0" expanded="true" />
+            <element signature="e#5231#7581#0" expanded="true" />
+            <element signature="e#7637#8416#0" expanded="true" />
+            <element signature="e#8442#8446#0" expanded="true" />
+            <element signature="e#8546#8953#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -489,13 +489,13 @@
         <state line="176" column="27" selection-start="5601" selection-end="5601" vertical-scroll-proportion="0.0" vertical-offset="1800" max-vertical-offset="3420">
           <folding>
             <element signature="e#26#38#0" expanded="true" />
-            <element signature="e#1009#1072#0" expanded="true" />
-            <element signature="e#2610#3670#0" expanded="true" />
-            <element signature="e#3763#5016#0" expanded="true" />
-            <element signature="e#5053#7409#0" expanded="true" />
-            <element signature="e#7465#8282#0" expanded="true" />
-            <element signature="e#8308#8312#0" expanded="true" />
-            <element signature="e#8412#8819#0" expanded="true" />
+            <element signature="e#2613#3848#0" expanded="true" />
+            <element signature="e#3881#3899#0" expanded="true" />
+            <element signature="e#3941#5194#0" expanded="true" />
+            <element signature="e#5231#7581#0" expanded="true" />
+            <element signature="e#7637#8416#0" expanded="true" />
+            <element signature="e#8442#8446#0" expanded="true" />
+            <element signature="e#8546#8953#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -505,13 +505,13 @@
         <state line="111" column="108" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3210">
           <folding>
             <element signature="e#26#38#0" expanded="true" />
-            <element signature="e#1009#1072#0" expanded="true" />
-            <element signature="e#2610#3670#0" expanded="true" />
-            <element signature="e#3763#5016#0" expanded="true" />
-            <element signature="e#5053#7409#0" expanded="true" />
-            <element signature="e#7465#8282#0" expanded="true" />
-            <element signature="e#8308#8312#0" expanded="true" />
-            <element signature="e#8412#8819#0" expanded="true" />
+            <element signature="e#2613#3848#0" expanded="true" />
+            <element signature="e#3881#3899#0" expanded="true" />
+            <element signature="e#3941#5194#0" expanded="true" />
+            <element signature="e#5231#7581#0" expanded="true" />
+            <element signature="e#7637#8416#0" expanded="true" />
+            <element signature="e#8442#8446#0" expanded="true" />
+            <element signature="e#8546#8953#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -549,9 +549,7 @@
     <entry file="file:///usr/local/lib/python2.7/site-packages/klibs/KLExperiment.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="224" column="18" selection-start="7554" selection-end="7554" vertical-scroll-proportion="0.12117904" vertical-offset="324" max-vertical-offset="2460">
-          <folding>
-            <element signature="e#15913#16520#0" expanded="true" />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -567,16 +565,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/experiment.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="124" column="20" selection-start="3715" selection-end="3715" vertical-scroll-proportion="0.180131" vertical-offset="1485" max-vertical-offset="3825">
+        <state line="45" column="19" selection-start="1000" selection-end="1000" vertical-scroll-proportion="0.73689955" vertical-offset="0" max-vertical-offset="3855">
           <folding>
             <element signature="e#26#38#0" expanded="true" />
-            <element signature="e#1009#1072#0" expanded="true" />
-            <element signature="e#2610#3670#0" expanded="true" />
-            <element signature="e#3763#5016#0" expanded="true" />
-            <element signature="e#5053#7409#0" expanded="true" />
-            <element signature="e#7465#8282#0" expanded="true" />
-            <element signature="e#8308#8312#0" expanded="true" />
-            <element signature="e#8412#8819#0" expanded="true" />
+            <element signature="e#2613#3848#0" expanded="true" />
+            <element signature="e#3881#3899#0" expanded="true" />
+            <element signature="e#3941#5194#0" expanded="true" />
+            <element signature="e#5231#7581#0" expanded="true" />
+            <element signature="e#7637#8416#0" expanded="true" />
+            <element signature="e#8442#8446#0" expanded="true" />
+            <element signature="e#8546#8953#0" expanded="true" />
           </folding>
         </state>
       </provider>
