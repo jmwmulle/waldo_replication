@@ -160,8 +160,7 @@ class WaldoReplication(klibs.Experiment):
 				raise TrialException("Gaze out of bounds.")
 			else:
 				self.refresh_background(False, True, True)
-		self.fill()
-		if self.bg_state != "absent": self.blit(self.bg[1])
+		self.refresh_background()
 		rt = -1
 		location = None
 		visited_locations = 0  # on OLD trials, matching self.locations.index(l) to len(self.locations) - 1 doesn't work
