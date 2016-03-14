@@ -195,10 +195,10 @@ class WaldoReplication(klibs.Experiment):
 				for e in event_stack:
 					self.ui_request(e)
 				pump()
-				if visited_locations == len(self.locations):
-					Params.tk.stop('rt')
-					rt = Params.tk.period('rt')
-					location = l
+				# if visited_locations == len(self.locations):
+				# 	Params.tk.stop('rt')
+				# 	rt = Params.tk.period('rt')
+				# 	location = l
 		if timed_out or location is None:
 			location = {AMP:-1, ANG: -1, LOC: (-1,-1)}
 		
